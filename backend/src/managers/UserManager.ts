@@ -31,48 +31,63 @@ export class UserManager {
             id
         });
         this.queue.push(id);
-        this.clearQueue();
+        socket.send(JSON.stringify({
+            type: 'lobby'
+        }));
         this.initHandlers(socket);
+        this.clearQueue();
     }
 
-    removeUser(id: string) {
-        this.users = this.users.filter(u => u.id !== id);
-        this.queue = this.queue.filter(u => u !== id);
+    removeUser(socket: WebSocket) {
+        const user = this.users.find(u => u.socket === socket)
+        this.users = this.users.filter(u => u.id !== user?.id);
+        this.queue = this.queue.filter(u => u !== user?.id);
     }
 
     clearQueue() {
         if (this.queue.length < 2) {
+            console.log('length of queue', this.queue.length);
+
             return;
         }
 
-        const user1 = this.users.find(u => u.id === this.queue.pop()),
-            user2 = this.users.find(u => u.id === this.queue.pop());
+        let id = this.queue.pop();
+        const user1 = this.users.find(u => u.id === id);
+
+        id = this.queue.pop();
+        const user2 = this.users.find(u => u.id === id);
 
         if (!user1 || !user2) {
             return;
         }
 
         this.roomManager.createRoom(user1, user2);
+        console.log('room created');
 
     }
 
     initHandlers(socket: WebSocket) {
-        
+
         socket.onmessage = (event) => {
-            try{
+            try {
                 const parsedData = JSON.parse(event.data as string);
 
-                if(parsedData.type === 'offer'){
+                if (parsedData.type === 'offer') {
                     this.roomManager.onOffer(parsedData.roomId, parsedData.sdp);
                 }
-                else if(parsedData.type === 'answer'){
+                else if (parsedData.type === 'answer') {
                     this.roomManager.onAnswer(parsedData.roomId, parsedData.sdp);
                 }
 
             }
-            catch(e){
+            catch (e) {
                 console.error(e);
             }
         }
+
+        socket.onclose = () => {
+            this.removeUser(socket)
+        }
+
     }
 }

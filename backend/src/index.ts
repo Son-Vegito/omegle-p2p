@@ -4,12 +4,11 @@ import { UserManager } from "./managers/UserManager";
 const PORT = 8080;
 
 const wss = new WebSocketServer({ port: PORT });
-const userManager = new UserManager;
+const userManager = new UserManager();
 
 wss.on('listening', () => {
     console.log(`Server listening on PORT ${PORT}`);
 })
-
 
 wss.on('connection', (ws, req) => {
 
@@ -18,8 +17,11 @@ wss.on('connection', (ws, req) => {
 
     if (!name) {
         ws.close();
+        console.log('name not found');
         return;
     }
+    console.log(name);
 
     userManager.addUser(name, ws);
+    console.log(name, 'added');
 })

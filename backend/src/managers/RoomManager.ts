@@ -21,6 +21,8 @@ export class RoomManager {
             user1,
             user2
         })
+        console.log('room created with id', roomId);
+
 
         user1.socket.send(JSON.stringify({
             type: 'send offer',
@@ -36,10 +38,11 @@ export class RoomManager {
     onOffer(roomId: number, sdp: string) {
         const room = this.rooms.get(roomId);
         const user2 = room?.user2;
-        
+
         user2?.socket.send(JSON.stringify({
             type: 'offer',
-            sdp
+            sdp,
+            roomId
         }));
     }
 
@@ -49,7 +52,8 @@ export class RoomManager {
 
         user1?.socket.send(JSON.stringify({
             type: 'answer',
-            sdp
+            sdp,
+            roomId
         }))
     }
 }
