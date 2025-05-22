@@ -9,5 +9,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "dependencies": {
+    "@types/ws": "^8.18.1",
+    "uuid": "^11.1.0",
+    "ws": "^8.18.2"
+  }
 }

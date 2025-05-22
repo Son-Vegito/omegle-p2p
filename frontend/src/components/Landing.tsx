@@ -4,6 +4,9 @@ import { useNavigate } from "react-router-dom"
 const Landing = () => {
     const navigate = useNavigate();
     const [name, setName] = useState<string>()
+
+
+    
     return (
         <div className="p-3 flex justify-center items-center h-screen gap-2">
             <input type="text" placeholder="Name"

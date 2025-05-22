@@ -1,0 +1,78 @@
+import { WebSocket } from "ws";
+import { v4 as uuid } from 'uuid'
+import { RoomManager } from "./RoomManager";
+
+export interface User {
+    id: string,
+    name: string,
+    socket: WebSocket
+}
+
+export class UserManager {
+    private users: User[];
+    private queue: string[];
+    private roomManager: RoomManager;
+
+    constructor() {
+        this.users = [];
+        this.queue = [];
+        this.roomManager = new RoomManager;
+    }
+
+    generateID() {
+        return uuid();
+    }
+
+    addUser(name: string, socket: WebSocket) {
+        const id = this.generateID();
+        this.users.push({
+            name,
+            socket,
+            id
+        });
+        this.queue.push(id);
+        this.clearQueue();
+        this.initHandlers(socket);
+    }
+
+    removeUser(id: string) {
+        this.users = this.users.filter(u => u.id !== id);
+        this.queue = this.queue.filter(u => u !== id);
+    }
+
+    clearQueue() {
+        if (this.queue.length < 2) {
+            return;
+        }
+
+        const user1 = this.users.find(u => u.id === this.queue.pop()),
+            user2 = this.users.find(u => u.id === this.queue.pop());
+
+        if (!user1 || !user2) {
+            return;
+        }
+
+        this.roomManager.createRoom(user1, user2);
+
+    }
+
+    initHandlers(socket: WebSocket) {
+        
+        socket.onmessage = (event) => {
+            try{
+                const parsedData = JSON.parse(event.data as string);
+
+                if(parsedData.type === 'offer'){
+                    this.roomManager.onOffer(parsedData.roomId, parsedData.sdp);
+                }
+                else if(parsedData.type === 'answer'){
+                    this.roomManager.onAnswer(parsedData.roomId, parsedData.sdp);
+                }
+
+            }
+            catch(e){
+                console.error(e);
+            }
+        }
+    }
+}
