@@ -34,7 +34,7 @@ export class UserManager {
         socket.send(JSON.stringify({
             type: 'lobby'
         }));
-        this.initHandlers(socket);
+        this.initHandlers(socket, id);
         this.clearQueue();
     }
 
@@ -66,17 +66,21 @@ export class UserManager {
 
     }
 
-    initHandlers(socket: WebSocket) {
+    initHandlers(socket: WebSocket, id: string) {
 
         socket.onmessage = (event) => {
             try {
                 const parsedData = JSON.parse(event.data as string);
 
                 if (parsedData.type === 'offer') {
-                    this.roomManager.onOffer(parsedData.roomId, parsedData.sdp);
+                    this.roomManager.onOffer(parsedData.roomId, parsedData.sdp, id);
                 }
                 else if (parsedData.type === 'answer') {
-                    this.roomManager.onAnswer(parsedData.roomId, parsedData.sdp);
+                    this.roomManager.onAnswer(parsedData.roomId, parsedData.sdp, id);
+                }
+                else if (parsedData.type === 'ice candidate') {
+                    // console.log('ice candidate from ', parsedData.from);
+                    this.roomManager.onIceCandidate(parsedData.roomId, parsedData.sdp, id, parsedData.from);
                 }
 
             }
